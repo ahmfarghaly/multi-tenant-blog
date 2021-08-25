@@ -1,0 +1,27 @@
+server:
+  servlet:    context-path: /api
+spring:
+  datasource: 
+    url: jdbc:h2:mem:userdb
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    data:    - classpath:/scripts/data.sql
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    properties:
+      ddl-auto: create      packagesToScan: dev.ams.cloud.multitenant.model
+  h2: 
+    console: 
+      enabled: true
+      settings:
+        web-allow-others: true
+      
+security:
+  basic:
+    enable: false
+          
+app: 
+  props: 
+    defaultTenant: PUBLIC

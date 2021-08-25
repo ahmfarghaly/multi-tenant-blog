@@ -1,0 +1,2 @@
+INSERT INTO DATA_SRC_CFG (DS_ID, DS_driver, DS_URL, DS_NAME, DS_user, DS_password, DS_init) VALUES (1, 'org.h2.Driver', 'jdbc:h2:mem:tenant1', 'tenant1', 'sa', 'password', true)
+INSERT INTO DATA_SRC_CFG (DS_ID, DS_driver, DS_URL, DS_NAME, DS_user, DS_password, DS_init) VALUES (2, 'org.h2.Driver', 'jdbc:h2:mem:tenant2', 'tenant2', 'sa', 'password', true)
