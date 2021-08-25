@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { PostAuthor } from './PostAuthor';
 import { TimeAgo } from './TimeAgo';
 import { selectAllPosts, fetchPosts } from './postsSlice';
+import { selectCurrentTenant } from '../tenants/tenantsSlice';
 
 
 export const PostsList = () => {
@@ -12,12 +13,13 @@ export const PostsList = () => {
     const posts = useSelector(selectAllPosts);
     const postsStatus = useSelector(state=>state.posts.status);
     const error = useSelector(state=>state.posts.error);
+    const currentTenant = useSelector(selectCurrentTenant);
 
     useEffect(()=>{
         if(postsStatus==='idle') {
-            dispatch(fetchPosts());
+            dispatch(fetchPosts(currentTenant));
         }
-    },[postsStatus,dispatch]);
+    },[postsStatus,dispatch,currentTenant]);
 
     let content;
     if(postsStatus==='loading') {

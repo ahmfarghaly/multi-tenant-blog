@@ -1,4 +1,4 @@
-import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { client } from '../../api/client';
 
 const initialState = 
@@ -8,8 +8,9 @@ const initialState =
     error: null
 };
 
-export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
-    const response = await client.get('/posts')
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async currentTenant => {
+    //,{headers:{'X-TenantID':state.tenents.currentTenant}}
+    const response = await client.get('/posts',{headers:{'X-TenantID':currentTenant}})
     return response.posts;
 });
 

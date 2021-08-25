@@ -32,7 +32,7 @@ nav section {
   width: 100%;
 }
 
-nav section h1,
+nav section h1,h3,
 nav section {
   color: white;
 }
@@ -255,4 +255,19 @@ button.reaction-button {
 
 .notification.new {
   background-color: rgba(29, 161, 242, 0.1);
+}
+
+.navHeaderDiv {
+  display: flex;
+  flex-direction: row;
+  align-items: left;
+  justify-content: space-around;
+}
+
+.navHeaderSection1 {
+  grid-column: 1/2;
+}
+
+.navHeaderSection2 {
+  grid-column: 3/4;
 }
