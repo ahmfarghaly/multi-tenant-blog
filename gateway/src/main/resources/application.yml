@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: regional-blog-gateway
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/directory}
+    username: ${SPRING_DATASOURCE_USERNAME:directory_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:directory_demo_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: DirectoryHikariPool
+      maximum-pool-size: 5
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  regional:
+    eu-url: ${APP_REGIONAL_EU_URL:http://localhost:8082}
+    me-url: ${APP_REGIONAL_ME_URL:http://localhost:8083}
+    apac-url: ${APP_REGIONAL_APAC_URL:http://localhost:8084}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

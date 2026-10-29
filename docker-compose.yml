@@ -1,0 +1,323 @@
+services:
+  # ============================================================================
+  # Tenant Directory Database (Control-Plane Data Store)
+  # ============================================================================
+  directory-db:
+    image: postgres:16.6-alpine
+    container_name: directory-db
+    environment:
+      POSTGRES_DB: ${DIRECTORY_DB_NAME:-directory}
+      POSTGRES_USER: ${DIRECTORY_DB_USER:-directory_user}
+      POSTGRES_PASSWORD: ${DIRECTORY_DB_PASSWORD:-directory_demo_secret_2026}
+    volumes:
+      - directory-db-data:/var/lib/postgresql/data
+    networks:
+      - directory-db-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DIRECTORY_DB_USER:-directory_user} -d ${DIRECTORY_DB_NAME:-directory}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ============================================================================
+  # Global Demo Gateway + Tenant Directory (Spring Cloud Gateway MVC)
+  # ============================================================================
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: gateway
+    environment:
+      SERVER_PORT: "8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://directory-db:5432/${DIRECTORY_DB_NAME:-directory}
+      SPRING_DATASOURCE_USERNAME: ${DIRECTORY_DB_USER:-directory_user}
+      SPRING_DATASOURCE_PASSWORD: ${DIRECTORY_DB_PASSWORD:-directory_demo_secret_2026}
+      APP_REGIONAL_EU_URL: http://eu-app:8080
+      APP_REGIONAL_ME_URL: http://me-app:8080
+      APP_REGIONAL_APAC_URL: http://apac-app:8080
+    ports:
+      - "8080:8080"
+    networks:
+      - directory-db-network
+      - gateway-network
+    depends_on:
+      directory-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Shard Databases - EU Region
+  # ============================================================================
+  eu-shard-1:
+    image: postgres:16.6-alpine
+    container_name: eu-shard-1
+    environment:
+      POSTGRES_DB: ${EU_DB_NAME:-blog}
+      POSTGRES_USER: ${EU_DB_USER:-eu_app_user}
+      POSTGRES_PASSWORD: ${EU_DB_PASSWORD:-eu_demo_secret_2026}
+    volumes:
+      - eu-shard-1-data:/var/lib/postgresql/data
+    networks:
+      - eu-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EU_DB_USER:-eu_app_user} -d ${EU_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  eu-shard-2:
+    image: postgres:16.6-alpine
+    container_name: eu-shard-2
+    environment:
+      POSTGRES_DB: ${EU_DB_NAME:-blog}
+      POSTGRES_USER: ${EU_DB_USER:-eu_app_user}
+      POSTGRES_PASSWORD: ${EU_DB_PASSWORD:-eu_demo_secret_2026}
+    volumes:
+      - eu-shard-2-data:/var/lib/postgresql/data
+    networks:
+      - eu-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EU_DB_USER:-eu_app_user} -d ${EU_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Blog Application - EU Region
+  # ============================================================================
+  eu-app:
+    build:
+      context: .
+      dockerfile: blog-service/Dockerfile
+    container_name: eu-app
+    environment:
+      REGION_ID: eu
+      DIRECTORY_BASE_URL: http://gateway:8080
+      SHARD_1_JDBC_URL: jdbc:postgresql://eu-shard-1:5432/${EU_DB_NAME:-blog}
+      SHARD_1_USERNAME: ${EU_DB_USER:-eu_app_user}
+      SHARD_1_PASSWORD: ${EU_DB_PASSWORD:-eu_demo_secret_2026}
+      SHARD_2_JDBC_URL: jdbc:postgresql://eu-shard-2:5432/${EU_DB_NAME:-blog}
+      SHARD_2_USERNAME: ${EU_DB_USER:-eu_app_user}
+      SHARD_2_PASSWORD: ${EU_DB_PASSWORD:-eu_demo_secret_2026}
+    ports:
+      - "127.0.0.1:8082:8080"
+    networks:
+      - gateway-network
+      - eu-data-network
+    depends_on:
+      eu-shard-1:
+        condition: service_healthy
+      eu-shard-2:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Shard Databases - Middle East Region
+  # ============================================================================
+  me-shard-1:
+    image: postgres:16.6-alpine
+    container_name: me-shard-1
+    environment:
+      POSTGRES_DB: ${ME_DB_NAME:-blog}
+      POSTGRES_USER: ${ME_DB_USER:-me_app_user}
+      POSTGRES_PASSWORD: ${ME_DB_PASSWORD:-me_demo_secret_2026}
+    volumes:
+      - me-shard-1-data:/var/lib/postgresql/data
+    networks:
+      - me-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ME_DB_USER:-me_app_user} -d ${ME_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  me-shard-2:
+    image: postgres:16.6-alpine
+    container_name: me-shard-2
+    environment:
+      POSTGRES_DB: ${ME_DB_NAME:-blog}
+      POSTGRES_USER: ${ME_DB_USER:-me_app_user}
+      POSTGRES_PASSWORD: ${ME_DB_PASSWORD:-me_demo_secret_2026}
+    volumes:
+      - me-shard-2-data:/var/lib/postgresql/data
+    networks:
+      - me-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ME_DB_USER:-me_app_user} -d ${ME_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Blog Application - Middle East Region
+  # ============================================================================
+  me-app:
+    build:
+      context: .
+      dockerfile: blog-service/Dockerfile
+    container_name: me-app
+    environment:
+      REGION_ID: me
+      DIRECTORY_BASE_URL: http://gateway:8080
+      SHARD_1_JDBC_URL: jdbc:postgresql://me-shard-1:5432/${ME_DB_NAME:-blog}
+      SHARD_1_USERNAME: ${ME_DB_USER:-me_app_user}
+      SHARD_1_PASSWORD: ${ME_DB_PASSWORD:-me_demo_secret_2026}
+      SHARD_2_JDBC_URL: jdbc:postgresql://me-shard-2:5432/${ME_DB_NAME:-blog}
+      SHARD_2_USERNAME: ${ME_DB_USER:-me_app_user}
+      SHARD_2_PASSWORD: ${ME_DB_PASSWORD:-me_demo_secret_2026}
+    ports:
+      - "127.0.0.1:8083:8080"
+    networks:
+      - gateway-network
+      - me-data-network
+    depends_on:
+      me-shard-1:
+        condition: service_healthy
+      me-shard-2:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Shard Databases - APAC Region
+  # ============================================================================
+  apac-shard-1:
+    image: postgres:16.6-alpine
+    container_name: apac-shard-1
+    environment:
+      POSTGRES_DB: ${APAC_DB_NAME:-blog}
+      POSTGRES_USER: ${APAC_DB_USER:-apac_app_user}
+      POSTGRES_PASSWORD: ${APAC_DB_PASSWORD:-apac_demo_secret_2026}
+    volumes:
+      - apac-shard-1-data:/var/lib/postgresql/data
+    networks:
+      - apac-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APAC_DB_USER:-apac_app_user} -d ${APAC_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  apac-shard-2:
+    image: postgres:16.6-alpine
+    container_name: apac-shard-2
+    environment:
+      POSTGRES_DB: ${APAC_DB_NAME:-blog}
+      POSTGRES_USER: ${APAC_DB_USER:-apac_app_user}
+      POSTGRES_PASSWORD: ${APAC_DB_PASSWORD:-apac_demo_secret_2026}
+    volumes:
+      - apac-shard-2-data:/var/lib/postgresql/data
+    networks:
+      - apac-data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APAC_DB_USER:-apac_app_user} -d ${APAC_DB_NAME:-blog}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ============================================================================
+  # Regional Blog Application - APAC Region
+  # ============================================================================
+  apac-app:
+    build:
+      context: .
+      dockerfile: blog-service/Dockerfile
+    container_name: apac-app
+    environment:
+      REGION_ID: apac
+      DIRECTORY_BASE_URL: http://gateway:8080
+      SHARD_1_JDBC_URL: jdbc:postgresql://apac-shard-1:5432/${APAC_DB_NAME:-blog}
+      SHARD_1_USERNAME: ${APAC_DB_USER:-apac_app_user}
+      SHARD_1_PASSWORD: ${APAC_DB_PASSWORD:-apac_demo_secret_2026}
+      SHARD_2_JDBC_URL: jdbc:postgresql://apac-shard-2:5432/${APAC_DB_NAME:-blog}
+      SHARD_2_USERNAME: ${APAC_DB_USER:-apac_app_user}
+      SHARD_2_PASSWORD: ${APAC_DB_PASSWORD:-apac_demo_secret_2026}
+    ports:
+      - "127.0.0.1:8084:8080"
+    networks:
+      - gateway-network
+      - apac-data-network
+    depends_on:
+      apac-shard-1:
+        condition: service_healthy
+      apac-shard-2:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+# ==============================================================================
+# Isolated Networks (Per-Region Data Plane + Isolated Directory DB + Gateway)
+# ==============================================================================
+networks:
+  gateway-network:
+    name: regional-blog-gateway-network
+    driver: bridge
+  directory-db-network:
+    name: regional-blog-directory-db-network
+    driver: bridge
+  eu-data-network:
+    name: regional-blog-eu-data-network
+    driver: bridge
+    internal: true
+  me-data-network:
+    name: regional-blog-me-data-network
+    driver: bridge
+    internal: true
+  apac-data-network:
+    name: regional-blog-apac-data-network
+    driver: bridge
+    internal: true
+
+# ==============================================================================
+# Named Persistent Volumes for All 7 Independent PostgreSQL Instances
+# ==============================================================================
+volumes:
+  directory-db-data:
+    name: regional-blog-directory-db-data
+  eu-shard-1-data:
+    name: regional-blog-eu-shard-1-data
+  eu-shard-2-data:
+    name: regional-blog-eu-shard-2-data
+  me-shard-1-data:
+    name: regional-blog-me-shard-1-data
+  me-shard-2-data:
+    name: regional-blog-me-shard-2-data
+  apac-shard-1-data:
+    name: regional-blog-apac-shard-1-data
+  apac-shard-2-data:
+    name: regional-blog-apac-shard-2-data
