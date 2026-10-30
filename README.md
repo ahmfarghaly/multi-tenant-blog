@@ -193,3 +193,104 @@ To wipe all demo data and container volumes:
 ```bash
 docker compose down -v
 ```
+
+---
+
+## 9. Alternative: Running with Embedded H2 (Zero-Docker / Low-Resource Setup)
+
+For resource-constrained environments (e.g. machines with limited RAM) or fast local iteration without Docker, the demo can be run using **Embedded H2** in PostgreSQL mode (`MODE=PostgreSQL`) instead of 7 dedicated PostgreSQL containers.
+
+In this setup:
+- **0 Docker database containers required.**
+- The `gateway` service embeds its directory metadata database (`./data/directory`).
+- Each regional `blog-service` embeds two physical shard databases (`./data/{region}-shard-1` and `./data/{region}-shard-2`).
+- Spring `AbstractRoutingDataSource`, Flyway migrations, and Hibernate 6 `@TenantId` multi-tenancy work identically.
+
+### Step 1: Enable H2 at Runtime in `pom.xml`
+In `gateway/pom.xml` and `blog-service/pom.xml`, update the H2 dependency scope from `<scope>test</scope>` to `<scope>runtime</scope>` (or remove the `<scope>` tag):
+
+```xml
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+Then rebuild the jars:
+```bash
+mvn clean package -DskipTests
+```
+
+### Step 2: Run Services with Embedded H2
+
+#### A. Gateway (`gateway`)
+Start `gateway` with an embedded H2 directory database:
+
+```bash
+java -jar gateway/target/gateway-1.0.0-SNAPSHOT.jar \
+  --server.port=8080 \
+  --spring.datasource.url="jdbc:h2:file:./data/directory;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --spring.datasource.username=sa \
+  --spring.datasource.password="" \
+  --spring.datasource.driver-class-name=org.h2.Driver \
+  --spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect \
+  --app.regional.eu-url=http://localhost:8082 \
+  --app.regional.me-url=http://localhost:8083 \
+  --app.regional.apac-url=http://localhost:8084
+```
+
+#### B. Regional Blog Services (`blog-service`)
+Launch the regional deployments pointing each shard to separate embedded H2 database files:
+
+**EU Regional App (`eu` on port 8082):**
+```bash
+java -jar blog-service/target/blog-service-1.0.0-SNAPSHOT.jar \
+  --server.port=8082 \
+  --app.regional.region-id=eu \
+  --app.regional.directory-base-url=http://localhost:8080 \
+  --app.regional.shard1.jdbc-url="jdbc:h2:file:./data/eu-shard-1;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard1.username=sa \
+  --app.regional.shard1.password="" \
+  --app.regional.shard2.jdbc-url="jdbc:h2:file:./data/eu-shard-2;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard2.username=sa \
+  --app.regional.shard2.password="" \
+  --spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+```
+
+**Middle East Regional App (`me` on port 8083):**
+```bash
+java -jar blog-service/target/blog-service-1.0.0-SNAPSHOT.jar \
+  --server.port=8083 \
+  --app.regional.region-id=me \
+  --app.regional.directory-base-url=http://localhost:8080 \
+  --app.regional.shard1.jdbc-url="jdbc:h2:file:./data/me-shard-1;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard1.username=sa \
+  --app.regional.shard1.password="" \
+  --app.regional.shard2.jdbc-url="jdbc:h2:file:./data/me-shard-2;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard2.username=sa \
+  --app.regional.shard2.password="" \
+  --spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+```
+
+**APAC Regional App (`apac` on port 8084):**
+```bash
+java -jar blog-service/target/blog-service-1.0.0-SNAPSHOT.jar \
+  --server.port=8084 \
+  --app.regional.region-id=apac \
+  --app.regional.directory-base-url=http://localhost:8080 \
+  --app.regional.shard1.jdbc-url="jdbc:h2:file:./data/apac-shard-1;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard1.username=sa \
+  --app.regional.shard1.password="" \
+  --app.regional.shard2.jdbc-url="jdbc:h2:file:./data/apac-shard-2;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+  --app.regional.shard2.username=sa \
+  --app.regional.shard2.password="" \
+  --spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+```
+
+### File-Based vs In-Memory
+- **File-Based Persistence (Recommended for manual verification):**
+  Using `jdbc:h2:file:./data/<dbname>;DB_CLOSE_DELAY=-1;MODE=PostgreSQL` persists demo data in the `./data/` folder across restarts. To reset data, simply delete the `./data/` directory.
+- **In-Memory (Ephemeral / Zero Disk Footprint):**
+  Replace `file:./data/<dbname>` with `mem:<dbname>` (e.g. `jdbc:h2:mem:eu-shard-1;DB_CLOSE_DELAY=-1;MODE=PostgreSQL`). Data resets automatically whenever the processes exit.
+

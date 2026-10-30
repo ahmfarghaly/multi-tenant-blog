@@ -1,9 +1,10 @@
+name: sa-multitenant-blog
 services:
   # ============================================================================
   # Tenant Directory Database (Control-Plane Data Store)
   # ============================================================================
   directory-db:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: directory-db
     environment:
       POSTGRES_DB: ${DIRECTORY_DB_NAME:-directory}
@@ -56,7 +57,7 @@ services:
   # Regional Shard Databases - EU Region
   # ============================================================================
   eu-shard-1:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: eu-shard-1
     environment:
       POSTGRES_DB: ${EU_DB_NAME:-blog}
@@ -74,7 +75,7 @@ services:
     restart: unless-stopped
 
   eu-shard-2:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: eu-shard-2
     environment:
       POSTGRES_DB: ${EU_DB_NAME:-blog}
@@ -132,7 +133,7 @@ services:
   # Regional Shard Databases - Middle East Region
   # ============================================================================
   me-shard-1:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: me-shard-1
     environment:
       POSTGRES_DB: ${ME_DB_NAME:-blog}
@@ -150,7 +151,7 @@ services:
     restart: unless-stopped
 
   me-shard-2:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: me-shard-2
     environment:
       POSTGRES_DB: ${ME_DB_NAME:-blog}
@@ -208,7 +209,7 @@ services:
   # Regional Shard Databases - APAC Region
   # ============================================================================
   apac-shard-1:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: apac-shard-1
     environment:
       POSTGRES_DB: ${APAC_DB_NAME:-blog}
@@ -226,7 +227,7 @@ services:
     restart: unless-stopped
 
   apac-shard-2:
-    image: postgres:16.6-alpine
+    image: postgres:16-alpine
     container_name: apac-shard-2
     environment:
       POSTGRES_DB: ${APAC_DB_NAME:-blog}
