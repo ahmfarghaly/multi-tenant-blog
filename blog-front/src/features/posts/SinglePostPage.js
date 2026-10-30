@@ -1,13 +1,13 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { selectPostById, deletePost } from './postsSlice';
 import { selectCurrentTenant } from '../tenants/tenantsSlice';
 
-export const SinglePostPage = ({ match }) => {
-  const { postId } = match.params;
+export const SinglePostPage = () => {
+  const { postId } = useParams();
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const post = useSelector((state) => selectPostById(state, postId));
   const currentTenant = useSelector(selectCurrentTenant);
 
@@ -26,7 +26,7 @@ export const SinglePostPage = ({ match }) => {
   const onDeletePost = async () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       await dispatch(deletePost({ id: post.id, tenantId: currentTenant }));
-      history.push('/posts');
+      navigate('/posts');
     }
   };
 

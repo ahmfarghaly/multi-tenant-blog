@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { updatePost, selectPostById } from './postsSlice';
 import { selectCurrentTenant } from '../tenants/tenantsSlice';
 
-export const EditPostForm = ({ match }) => {
-  const { postId } = match.params;
+export const EditPostForm = () => {
+  const { postId } = useParams();
   const post = useSelector((state) => selectPostById(state, postId));
   const currentTenant = useSelector(selectCurrentTenant);
 
@@ -14,7 +14,7 @@ export const EditPostForm = ({ match }) => {
   const [status, setStatus] = useState(post ? post.status : 'DRAFT');
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   if (!post) {
     return (
@@ -43,7 +43,7 @@ export const EditPostForm = ({ match }) => {
           tenantId: currentTenant,
         })
       );
-      history.push(`/posts/${postId}`);
+      navigate(`/posts/${postId}`);
     }
   };
 

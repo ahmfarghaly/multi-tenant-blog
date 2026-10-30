@@ -1,5 +1,7 @@
 // Tiny wrapper around fetch() for the Global Gateway API
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
+  'http://localhost:8080';
 
 export async function client(endpoint, { body, ...customConfig } = {}) {
   const headers = { 'Content-Type': 'application/json' };
