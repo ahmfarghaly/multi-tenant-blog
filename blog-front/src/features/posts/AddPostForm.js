@@ -36,30 +36,44 @@ export const AddPostForm = () => {
   };
 
   return (
-    <section style={{ marginTop: '2rem', padding: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}>
-      <h2>Add a New Post ({currentTenant})</h2>
+    <section id="add-post-section" className="card" style={{ marginTop: '2rem' }}>
+      <div className="card-header">
+        <div>
+          <h2 className="card-title">Create New Article</h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Post will be saved to the database shard assigned to tenant <code>{currentTenant}</code>
+          </span>
+        </div>
+        <span className="badge badge-region">{currentTenant}</span>
+      </div>
       <form>
-        <label htmlFor="postTitle">Post Title:</label>
-        <input
-          type="text"
-          id="postTitle"
-          name="postTitle"
-          value={title}
-          onChange={onTitleChanged}
-          placeholder="Enter post title..."
-        />
-        <label htmlFor="postContent">Content:</label>
-        <textarea
-          id="postContent"
-          name="postContent"
-          value={body}
-          onChange={onBodyChanged}
-          placeholder="Write post content..."
-          rows="5"
-        />
-        <button type="button" onClick={onSavePost} disabled={!canSave}>
-          Save Draft Post
-        </button>
+        <div>
+          <label htmlFor="postTitle">Article Title</label>
+          <input
+            type="text"
+            id="postTitle"
+            name="postTitle"
+            value={title}
+            onChange={onTitleChanged}
+            placeholder="e.g. Scaling Regional Microservices in EMEA"
+          />
+        </div>
+        <div>
+          <label htmlFor="postContent">Article Body</label>
+          <textarea
+            id="postContent"
+            name="postContent"
+            value={body}
+            onChange={onBodyChanged}
+            placeholder="Write your article content here..."
+            rows="6"
+          />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+          <button type="button" onClick={onSavePost} disabled={!canSave}>
+            {addRequestStatus === 'pending' ? 'Saving to Shard...' : 'Publish Article'}
+          </button>
+        </div>
       </form>
     </section>
   );

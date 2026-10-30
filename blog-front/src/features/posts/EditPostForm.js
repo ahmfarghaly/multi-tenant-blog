@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import { updatePost, selectPostById } from './postsSlice';
 import { selectCurrentTenant } from '../tenants/tenantsSlice';
 
@@ -18,8 +18,12 @@ export const EditPostForm = ({ match }) => {
 
   if (!post) {
     return (
-      <section>
+      <section className="card">
         <h2>Post not found!</h2>
+        <p style={{ color: 'var(--text-muted)' }}>The requested article does not exist or has been deleted.</p>
+        <Link to="/posts" className="button">
+          Back to Articles
+        </Link>
       </section>
     );
   }
@@ -44,36 +48,56 @@ export const EditPostForm = ({ match }) => {
   };
 
   return (
-    <section>
-      <h2>Edit Post</h2>
+    <section className="card">
+      <div className="card-header">
+        <div>
+          <h2 className="card-title">Edit Article #{postId}</h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Changes will be committed to the tenant database shard
+          </span>
+        </div>
+        <span className="badge badge-region">{currentTenant}</span>
+      </div>
       <form>
-        <label htmlFor="postTitle">Post Title:</label>
-        <input
-          type="text"
-          id="postTitle"
-          name="postTitle"
-          value={title}
-          onChange={onTitleChanged}
-        />
+        <div>
+          <label htmlFor="postTitle">Article Title</label>
+          <input
+            type="text"
+            id="postTitle"
+            name="postTitle"
+            value={title}
+            onChange={onTitleChanged}
+          />
+        </div>
 
-        <label htmlFor="postStatus">Status:</label>
-        <select id="postStatus" value={status} onChange={onStatusChanged}>
-          <option value="DRAFT">DRAFT</option>
-          <option value="PUBLISHED">PUBLISHED</option>
-        </select>
+        <div>
+          <label htmlFor="postStatus">Publication Status</label>
+          <select id="postStatus" value={status} onChange={onStatusChanged}>
+            <option value="DRAFT">DRAFT</option>
+            <option value="PUBLISHED">PUBLISHED</option>
+          </select>
+        </div>
 
-        <label htmlFor="postContent">Content:</label>
-        <textarea
-          id="postContent"
-          name="postContent"
-          value={body}
-          onChange={onBodyChanged}
-          rows="6"
-        />
+        <div>
+          <label htmlFor="postContent">Article Body</label>
+          <textarea
+            id="postContent"
+            name="postContent"
+            value={body}
+            onChange={onBodyChanged}
+            rows="8"
+          />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+          <Link to={`/posts/${postId}`} className="button muted-button">
+            Cancel
+          </Link>
+          <button type="button" onClick={onSavePost}>
+            Save Changes
+          </button>
+        </div>
       </form>
-      <button type="button" onClick={onSavePost}>
-        Save Post Changes
-      </button>
     </section>
   );
 };

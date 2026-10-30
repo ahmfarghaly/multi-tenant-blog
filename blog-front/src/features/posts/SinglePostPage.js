@@ -13,10 +13,11 @@ export const SinglePostPage = ({ match }) => {
 
   if (!post) {
     return (
-      <section>
+      <section className="card">
         <h2>Post not found!</h2>
+        <p style={{ color: 'var(--text-muted)' }}>The requested article does not exist or has been deleted.</p>
         <Link to="/posts" className="button">
-          Back to Posts List
+          Back to Articles
         </Link>
       </section>
     );
@@ -31,38 +32,63 @@ export const SinglePostPage = ({ match }) => {
 
   return (
     <section>
-      <article className="post">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>{post.title}</h2>
-          <span
-            style={{
-              padding: '0.2rem 0.6rem',
-              borderRadius: '4px',
-              fontSize: '0.85rem',
-              backgroundColor: post.status === 'PUBLISHED' ? '#28a745' : '#ffc107',
-              color: post.status === 'PUBLISHED' ? '#fff' : '#000',
-            }}
-          >
+      <article className="card" style={{ padding: '2rem' }}>
+        <div className="card-header" style={{ marginBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 0.5rem', color: 'var(--text-main)' }}>
+              {post.title}
+            </h2>
+            <div className="post-meta" style={{ margin: 0 }}>
+              <span>Tenant: <code>{post.tenantId}</code></span>
+              <span>•</span>
+              <span>
+                Created: {post.createdAt ? new Date(post.createdAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : 'N/A'}
+              </span>
+              {post.updatedAt && (
+                <>
+                  <span>•</span>
+                  <span>Updated: {new Date(post.updatedAt).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</span>
+                </>
+              )}
+            </div>
+          </div>
+          <span className={`badge ${post.status === 'PUBLISHED' ? 'badge-published' : 'badge-draft'}`}>
             {post.status}
           </span>
         </div>
-        <p style={{ color: '#666', fontSize: '0.85rem' }}>
-          Tenant: <code>{post.tenantId}</code> | Created: {post.createdAt ? new Date(post.createdAt).toLocaleString() : 'N/A'} | Updated: {post.updatedAt ? new Date(post.updatedAt).toLocaleString() : 'N/A'}
-        </p>
-        <p className="post-content" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+
+        <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.75', fontSize: '1.05rem', color: '#334155', minHeight: '120px', padding: '0.5rem 0 2rem' }}>
           {post.body}
-        </p>
-        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem' }}>
-          <Link to={`/editPost/${post.id}`} className="button">
-            Edit Post
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/posts" className="button muted-button">
+            &larr; Back to Articles
           </Link>
-          <button
-            type="button"
-            onClick={onDeletePost}
-            style={{ backgroundColor: '#dc3545', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Delete Post
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <Link to={`/editPost/${post.id}`} className="button">
+              Edit Article
+            </Link>
+            <button
+              type="button"
+              onClick={onDeletePost}
+              className="button danger-button"
+            >
+              Delete Article
+            </button>
+          </div>
         </div>
       </article>
     </section>
