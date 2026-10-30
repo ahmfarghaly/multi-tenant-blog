@@ -1,9 +1,9 @@
 import React, { Fragment } from 'react';
 import {
   BrowserRouter as Router,
-  Switch,
+  Routes,
   Route,
-  Redirect,
+  Navigate,
 } from 'react-router-dom';
 
 import { Navbar } from './app/Navbar';
@@ -18,26 +18,26 @@ function App() {
     <Router>
       <Navbar />
       <div className="App">
-        <Switch>
+        <Routes>
           <Route
-            exact
             path="/posts"
-            render={() => (
+            element={
               <Fragment>
                 <PostsList />
                 <AddPostForm />
               </Fragment>
-            )}
+            }
           />
-          <Route exact path="/posts/:postId" component={SinglePostPage} />
-          <Route exact path="/editPost/:postId" component={EditPostForm} />
-          <Route exact path="/addPost" component={AddPostForm} />
-          <Route exact path="/home" component={TenantHomePage} />
-          <Redirect to="/home" />
-        </Switch>
+          <Route path="/posts/:postId" element={<SinglePostPage />} />
+          <Route path="/editPost/:postId" element={<EditPostForm />} />
+          <Route path="/addPost" element={<AddPostForm />} />
+          <Route path="/home" element={<TenantHomePage />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
       </div>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
+

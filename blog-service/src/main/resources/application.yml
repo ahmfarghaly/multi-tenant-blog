@@ -1,0 +1,47 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: regional-blog-service
+  flyway:
+    enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: "none"
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
+        format_sql: true
+
+app:
+  regional:
+    region-id: ${REGION_ID:eu}
+    directory-base-url: ${DIRECTORY_BASE_URL:http://gateway:8080}
+    cache-ttl-seconds: ${DIRECTORY_CACHE_TTL_SECONDS:30}
+    shard1:
+      jdbc-url: ${SHARD_1_JDBC_URL:jdbc:postgresql://localhost:5432/blog}
+      username: ${SHARD_1_USERNAME:eu_app_user}
+      password: ${SHARD_1_PASSWORD:eu_demo_secret_2026}
+      maximum-pool-size: 5
+      minimum-idle: 2
+    shard2:
+      jdbc-url: ${SHARD_2_JDBC_URL:jdbc:postgresql://localhost:5433/blog}
+      username: ${SHARD_2_USERNAME:eu_app_user}
+      password: ${SHARD_2_PASSWORD:eu_demo_secret_2026}
+      maximum-pool-size: 5
+      minimum-idle: 2
+  diagnostics:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

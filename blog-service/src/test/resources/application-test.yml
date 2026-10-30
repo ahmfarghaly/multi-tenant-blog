@@ -1,0 +1,35 @@
+server:
+  port: 0
+
+spring:
+  flyway:
+    enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: "none"
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        temp:
+          use_jdbc_metadata_defaults: false
+
+app:
+  regional:
+    region-id: eu
+    directory-base-url: http://localhost:8080
+    cache-ttl-seconds: 10
+    shard1:
+      jdbc-url: jdbc:h2:mem:shard1_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+      username: sa
+      password: ""
+      maximum-pool-size: 5
+      minimum-idle: 2
+    shard2:
+      jdbc-url: jdbc:h2:mem:shard2_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+      username: sa
+      password: ""
+      maximum-pool-size: 5
+      minimum-idle: 2
+  diagnostics:
+    enabled: true
